@@ -7,8 +7,10 @@ import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductService {
-  @InjectRepository(Product)
-  private readonly productRepository: Repository<Product>;
+  constructor(
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
+  ) {}
 
   async getAllProducts(): Promise<Product[]> {
     const products = await this.productRepository.find();
