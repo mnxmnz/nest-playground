@@ -1,26 +1,49 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DeleteResult, Repository } from 'typeorm';
+import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductService {
-  create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product';
+  @InjectRepository(Product)
+  private readonly productRepository: Repository<Product>;
+
+  async getAllProducts(): Promise<Product[]> {
+    const products = await this.productRepository.find();
+    return products;
   }
 
-  findAll() {
-    return `This action returns all product`;
+  async createProduct(createProductDto: CreateProductDto): Promise<Product> {
+    const newProduct = this.productRepository.create(createProductDto);
+    await this.productRepository.save(newProduct);
+    return newProduct;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async getProductById(id: string): Promise<Product> {
+    const product = await this.productRepository.findOne({ where: { id } });
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+    return product;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async updateProduct(
+    id: string,
+    updateProductDto: UpdateProductDto,
+  ): Promise<Product> {
+    const product = await this.getProductById(id);
+    this.productRepository.merge(product, updateProductDto);
+    await this.productRepository.save(product);
+    return product;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+  async deleteProduct(id: string): Promise<DeleteResult> {
+    const result = await this.productRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException('Product not found');
+    }
+    return result;
   }
 }

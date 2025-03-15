@@ -1,13 +1,14 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Post,
+  Put,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
+import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
@@ -15,28 +16,41 @@ import { UpdateProductDto } from './dto/update-product.dto';
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productService.create(createProductDto);
+  @Get('/all')
+  async getAllProducts(): Promise<Product[]> {
+    const products = await this.productService.getAllProducts();
+    return products;
   }
 
-  @Get()
-  findAll() {
-    return this.productService.findAll();
+  @Post('/create')
+  async createProduct(
+    @Body() createProductDto: CreateProductDto,
+  ): Promise<Product> {
+    const newProduct =
+      await this.productService.createProduct(createProductDto);
+    return newProduct;
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.productService.findOne(+id);
+  @Get('/:id')
+  async getProductById(@Param('id') id: string): Promise<Product> {
+    const product = await this.productService.getProductById(id);
+    return product;
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productService.update(+id, updateProductDto);
+  @Put('/:id')
+  async updateProduct(
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto,
+  ): Promise<Product> {
+    const updatedProduct = await this.productService.updateProduct(
+      id,
+      updateProductDto,
+    );
+    return updatedProduct;
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productService.remove(+id);
+  @Delete('/:id')
+  async deleteProduct(@Param('id') id: string): Promise<void> {
+    await this.productService.deleteProduct(id);
   }
 }
